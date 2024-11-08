@@ -16,16 +16,21 @@ const colorVariants = {
 };
 
 const zodSchema = z.object({
-  color: z.number(),
   title: z.string(),
-  description: z.string(),
-  fieldsArr: z.array(z.object({ name: z.string(), value: z.string() })),
+  content: z.string().optional(),
+  color: z.number().optional(),
+  description: z.string().optional(),
+  fieldsArr: z
+    .array(z.object({ name: z.string(), value: z.string() }))
+    .optional(),
 });
 
 export const POST = async (request: Request) => {
-  const { variant, title, fieldsArr, description } = await request.json();
+  const { variant, title, fieldsArr, description, content } =
+    await request.json();
 
   const { success, data } = zodSchema.safeParse({
+    content,
     color:
       colorVariants[variant as keyof typeof colorVariants] ||
       colorVariants["unknown"],
@@ -45,18 +50,18 @@ export const POST = async (request: Request) => {
   };
 
   const discordClient = DiscordClient();
-  discordClient.sendEmbed(embedData);
+  discordClient.sendEmbed(embedData, content);
 
   return new Response("OK");
 };
 
 function DiscordClient() {
   const rest = new REST({ version: "10" }).setToken(
-    process.env.DISCORD_BOT_TOKEN ?? ""
+    process.env.DISCORD_BOT_TOKEN ?? "",
   );
 
   async function createDM(
-    userId: string
+    userId: string,
   ): Promise<RESTPostAPICurrentUserCreateDMChannelResult> {
     return rest.post(Routes.userChannels(), {
       body: { recipient_id: userId },
@@ -64,13 +69,17 @@ function DiscordClient() {
   }
 
   async function sendEmbed(
-    embed: APIEmbed
+    embed: APIEmbed,
+    content: string,
   ): Promise<RESTPostAPIChannelMessageResult> {
     return rest.post(
       Routes.channelMessages(process.env.DISCORD_CHANNEL_ID ?? ""),
       {
-        body: { embeds: [embed] },
-      }
+        body: {
+          content,
+          embeds: [embed],
+        },
+      },
     ) as Promise<RESTPostAPIChannelMessageResult>;
   }
 
