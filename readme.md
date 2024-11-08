@@ -8,7 +8,7 @@
 
 2. **Install Required Packages**:
 
-   - Install `@discordjs/rest` and `discord-api-types`.
+   - Install `@discordjs/rest` and `discord-api-types` also `zod` for validation.
    - Create a `.env` file and add the following variables:
 
      ```plaintext
